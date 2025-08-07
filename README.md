@@ -1,140 +1,161 @@
-# Git Secret Detection Hook 🔐
+# Git Secrets Guard 🔐
 
-防止将敏感信息（API密钥、密码、个人隐私等）意外提交到Git仓库的预提交钩子。
+<div align="center">
 
-## 特性 ✨
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ivesyi/git-secrets-guard/pulls)
 
-### 支持检测的LLM API密钥
+**[English](README.md)** | [简体中文](README.zh-CN.md)
+
+*Prevent secrets, API keys, and sensitive data from being committed to your Git repositories*
+
+</div>
+
+## ✨ Features
+
+### Detects LLM API Keys
 - **OpenAI**: `sk-xxx`, `sk-proj-xxx`
-- **Anthropic Claude**: `sk-ant-xxx`
+- **Anthropic Claude**: `sk-ant-xxx` 
 - **Google (Gemini/PaLM)**: `AIzaxxx`
-- **Azure OpenAI**: Azure密钥格式
+- **Azure OpenAI**: Azure key formats
 - **Hugging Face**: `hf_xxx`
-- **国内LLM提供商**:
-  - 百度文心一言
-  - 阿里通义千问
-  - 讯飞星火
-  - 智谱AI (GLM)
+- **Chinese LLM Providers**:
+  - Baidu Wenxin (ERNIE)
+  - Alibaba Tongyi Qianwen
+  - iFlytek Spark
+  - Zhipu AI (GLM)
   - Moonshot/Kimi
   - MiniMax
 
-### 其他检测内容
-- AWS、GitHub、Slack等服务密钥
-- 数据库连接字符串和密码
-- SSH私钥和证书
-- JWT令牌
-- 个人隐私信息（身份证、手机号、银行卡号）
-- 高熵字符串（可能的密钥）
+### Also Detects
+- AWS, GitHub, Slack service keys
+- Database connection strings and passwords
+- SSH private keys and certificates
+- JWT tokens
+- Personal information (ID numbers, phone numbers, credit cards)
+- High-entropy strings (potential secrets)
 
-## 快速安装 🚀
+## 🚀 Quick Install
 
-### 方法1：一键安装（最简单） 🎯
+### Method 1: One-Line Install (Simplest) 🎯
 
-使用 curl：
+Using curl:
 ```bash
 curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
 ```
 
-或使用 wget：
+Using wget:
 ```bash
 wget -qO- https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
 ```
 
-这将自动下载并配置 git-secrets-guard，您可以选择：
-- 为当前仓库安装
-- 全局安装（所有新仓库自动保护）
-- 或两者都安装
+This will automatically download and configure git-secrets-guard. You can choose to:
+- Install for current repository
+- Install globally (all new repositories automatically protected)
+- Install both
 
-### 方法2：使用本地安装脚本
+### Method 2: Local Installation Script
 
 ```bash
-# 给脚本添加执行权限
+# Clone the repository
+git clone https://github.com/ivesyi/git-secrets-guard.git
+cd git-secrets-guard
+
+# Make script executable
 chmod +x install-git-hooks.sh
 
-# 运行安装脚本
+# Run installation script
 ./install-git-hooks.sh
 ```
 
-安装脚本提供以下选项：
-1. 在当前目录安装
-2. 在指定仓库安装
-3. 全局安装（影响所有新仓库）
-4. 显示手动安装说明
+The installation script provides the following options:
+1. Install in current directory
+2. Install in specific repository
+3. Global installation (affects all new repositories)
+4. Show manual installation instructions
 
-### 方法3：手动安装
+### Method 3: Manual Installation
 
 ```bash
-# 1. 初始化Git仓库（如果还没有）
+# 1. Initialize Git repository (if not already)
 git init
 
-# 2. 复制hook脚本到.git/hooks目录
+# 2. Copy hook script to .git/hooks directory
 cp check-secrets.sh .git/hooks/pre-commit
 
-# 3. 添加执行权限
+# 3. Make it executable
 chmod +x .git/hooks/pre-commit
 ```
 
-### 方法4：全局配置
+### Method 4: Global Configuration
 
 ```bash
-# 1. 创建全局Git模板目录
+# 1. Create global Git hooks directory
 mkdir -p ~/.git-templates/hooks
 
-# 2. 复制hook到模板目录
+# 2. Copy hook to template directory
 cp check-secrets.sh ~/.git-templates/hooks/pre-commit
 chmod +x ~/.git-templates/hooks/pre-commit
 
-# 3. 配置Git使用模板
+# 3. Configure Git to use template
 git config --global init.templatedir ~/.git-templates
 
-# 4. 对于已存在的仓库，运行git init来应用模板
+# 4. For existing repositories, run git init to apply template
 cd /path/to/existing/repo
 git init
 ```
 
-## 使用方法 📖
+## 🖥️ Demo
 
-### 正常提交
-Hook会在每次`git commit`时自动运行：
+### When API Key is Detected:
+![API Key Detection](images/demo-api-key-detection.png)
+
+### When Database URL is Detected:
+![Database URL Detection](images/demo-database-url-detection.png)
+
+## 📖 Usage
+
+### Normal Commits
+The hook runs automatically on every `git commit`:
 
 ```bash
 git add .
 git commit -m "your message"
-# Hook自动检查暂存的文件
+# Hook automatically checks staged files
 ```
 
-### 测试Hook是否工作
+### Test If Hook Works
 
-创建一个测试文件：
+Create a test file:
 ```bash
 echo 'OPENAI_API_KEY="sk-1234567890abcdef1234567890abcdef"' > test.txt
 git add test.txt
 git commit -m "test"
-# 应该被阻止并显示警告
+# Should be blocked with warning
 ```
 
-### 绕过检查（谨慎使用）
+### Bypass Check (Use Carefully)
 
-如果确定是误报，可以使用`--no-verify`选项：
+If you're certain it's a false positive:
 ```bash
 git commit --no-verify -m "your message"
 ```
 
-⚠️ **警告**：只有在确认没有敏感信息时才使用此选项！
+⚠️ **Warning**: Only use this option when you're certain there's no sensitive information!
 
-## 配置建议 🛠️
+## 🛠️ Configuration
 
-### 1. 创建.gitignore文件
+### 1. Create .gitignore
 
 ```bash
-# 创建或编辑.gitignore
+# Create or edit .gitignore
 cat >> .gitignore << EOF
-# 环境变量文件
+# Environment files
 .env
 .env.*
 *.env
 
-# 密钥和证书
+# Keys and certificates
 *.pem
 *.key
 *.p12
@@ -142,139 +163,139 @@ cat >> .gitignore << EOF
 *.jks
 *.keystore
 
-# 配置文件
+# Config files
 config/secrets.*
 credentials.json
 service-account*.json
 
-# IDE配置
+# IDE settings
 .vscode/settings.json
 .idea/
 EOF
 ```
 
-### 2. 使用环境变量
+### 2. Use Environment Variables
 
-不要硬编码密钥：
+Don't hardcode secrets:
 ```javascript
-// ❌ 错误做法
+// ❌ Wrong
 const apiKey = "sk-1234567890abcdef";
 
-// ✅ 正确做法
+// ✅ Correct
 const apiKey = process.env.OPENAI_API_KEY;
 ```
 
-### 3. 使用.env文件进行本地开发
+### 3. Use .env Files for Local Development
 
-创建`.env`文件：
+Create `.env` file:
 ```bash
 OPENAI_API_KEY=sk-your-key-here
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 DATABASE_URL=postgresql://user:pass@localhost/db
 ```
 
-在代码中使用：
+Use in code:
 ```javascript
 require('dotenv').config();
 const apiKey = process.env.OPENAI_API_KEY;
 ```
 
-**重要**：确保`.env`在`.gitignore`中！
+**Important**: Make sure `.env` is in `.gitignore`!
 
-## 自定义配置 ⚙️
+## ⚙️ Customization
 
-### 添加新的检测模式
+### Add New Detection Patterns
 
-编辑`check-secrets.sh`，在`PATTERNS`数组中添加新模式：
+Edit `check-secrets.sh`, add patterns to `PATTERNS` array:
 
 ```bash
 declare -a PATTERNS=(
-    # 添加你的自定义模式
+    # Add your custom pattern
     "your-pattern-here"
     # ...
 )
 ```
 
-### 添加新的关键词
+### Add New Keywords
 
-在`KEYWORDS`数组中添加：
+Add to `KEYWORDS` array:
 
 ```bash
 declare -a KEYWORDS=(
-    # 添加你的关键词
+    # Add your keyword
     "YOUR_SECRET_KEY"
     # ...
 )
 ```
 
-### 调整检测严格程度
+### Adjust Detection Strictness
 
-- **更严格**：将高熵字符串检查改为阻塞而非警告
-- **更宽松**：注释掉某些检测模式
+- **Stricter**: Change high-entropy string check from warning to blocking
+- **Looser**: Comment out certain detection patterns
 
-## 常见问题 ❓
+## ❓ FAQ
 
-### Q: Hook没有运行？
-A: 确保：
-1. 文件有执行权限：`chmod +x .git/hooks/pre-commit`
-2. 文件名正确：必须是`pre-commit`（没有扩展名）
-3. 在Git仓库中：确保当前目录是Git仓库
+### Q: Hook not running?
+A: Make sure:
+1. File has execute permission: `chmod +x .git/hooks/pre-commit`
+2. Filename is correct: must be `pre-commit` (no extension)
+3. You're in a Git repository
 
-### Q: 误报太多？
-A: 你可以：
-1. 使用`--no-verify`临时绕过
-2. 调整检测模式
-3. 将非敏感的配置文件排除
+### Q: Too many false positives?
+A: You can:
+1. Use `--no-verify` to temporarily bypass
+2. Adjust detection patterns
+3. Exclude non-sensitive config files
 
-### Q: 如何检查已经提交的历史？
-A: 使用工具如：
+### Q: How to check already committed history?
+A: Use tools like:
 - [git-secrets](https://github.com/awslabs/git-secrets)
 - [truffleHog](https://github.com/trufflesecurity/trufflehog)
 - [gitleaks](https://github.com/zricethezav/gitleaks)
 
-### Q: 如何在CI/CD中使用？
-A: 在CI pipeline中添加：
+### Q: How to use in CI/CD?
+A: Add to CI pipeline:
 ```yaml
-# GitHub Actions示例
+# GitHub Actions example
 - name: Check secrets
   run: |
     chmod +x check-secrets.sh
     ./check-secrets.sh
 ```
 
-## 最佳实践 💡
+## 💡 Best Practices
 
-1. **永远不要**硬编码密钥在源代码中
-2. **使用**环境变量管理敏感配置
-3. **定期**轮换你的API密钥
-4. **立即**撤销任何已暴露的密钥
-5. **审查**你的提交历史，确保没有遗留的敏感信息
-6. **教育**团队成员安全意识
+1. **Never** hardcode secrets in source code
+2. **Use** environment variables for sensitive configuration
+3. **Regularly** rotate your API keys
+4. **Immediately** revoke any exposed keys
+5. **Review** your commit history for any lingering sensitive data
+6. **Educate** team members about security awareness
 
-## 如果密钥已经泄露 🚨
+## 🚨 If Keys Are Leaked
 
-1. **立即撤销**泄露的密钥
-2. **生成新密钥**
-3. **检查日志**查看是否有未授权访问
-4. **清理Git历史**（如果需要）：
+1. **Immediately revoke** the leaked keys
+2. **Generate new keys**
+3. **Check logs** for unauthorized access
+4. **Clean Git history** (if needed):
    ```bash
-   # 使用BFG Repo-Cleaner
+   # Using BFG Repo-Cleaner
    bfg --delete-files YOUR-FILE-WITH-SECRETS
    
-   # 或使用git filter-branch（更复杂）
+   # Or using git filter-branch (more complex)
    git filter-branch --force --index-filter \
      "git rm --cached --ignore-unmatch PATH-TO-YOUR-FILE" \
      --prune-empty --tag-name-filter cat -- --all
    ```
 
-## 贡献 🤝
+## 🤝 Contributing
 
-欢迎提交问题和改进建议！如果你发现新的API密钥格式，请告诉我们。
+Issues and pull requests are welcome! If you discover new API key formats, please let us know.
 
-## 许可证 📄
+## 📄 License
 
-MIT License - 自由使用和修改
+MIT License - Free to use and modify
 
 ---
 
-**记住**：安全是每个开发者的责任！保护好你的密钥就是保护你的应用和用户。🛡️
+**Remember**: Security is every developer's responsibility! Protecting your keys means protecting your applications and users. 🛡️

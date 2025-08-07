@@ -201,10 +201,7 @@ declare -a PATTERNS=(
     "redis://[^\\s]+"
     "amqp://[^\\s]+"
     
-    # Private Keys
-    "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----"
-    "-----BEGIN PGP PRIVATE KEY BLOCK-----"
-    "-----BEGIN CERTIFICATE-----"
+    # Private Keys (需要特殊处理，放在后面单独检查)
     
     # JWT tokens
     "eyJ[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+"
@@ -283,23 +280,53 @@ for FILE in $STAGED_FILES; do
         # Get the staged content (not the working directory content)
         STAGED_CONTENT=$(git show ":$FILE" 2>/dev/null)
         
-        # Check for patterns using grep
+        # Track findings for this file
+        FILE_ISSUES=""
+        FILE_HAS_ISSUES=0
+        
+        # Check for patterns using grep (suppress errors)
         for PATTERN in "${PATTERNS[@]}"; do
-            if echo "$STAGED_CONTENT" | grep -qE "$PATTERN"; then
-                echo -e "${RED}⚠️  Potential sensitive data found in $FILE${NC}"
-                echo -e "${YELLOW}   Pattern matched: $PATTERN${NC}"
-                FOUND_SENSITIVE=1
+            if echo "$STAGED_CONTENT" | grep -qE "$PATTERN" 2>/dev/null; then
+                # Only show meaningful patterns, skip generic ones
+                if [[ ! "$PATTERN" =~ ^\[a-zA-Z0-9\]\{32\}$ ]] && \
+                   [[ ! "$PATTERN" =~ ^\[a-zA-Z0-9\]\{40\}$ ]] && \
+                   [[ ! "$PATTERN" =~ ^\[a-f0-9\]\{32\}$ ]] && \
+                   [[ ! "$PATTERN" =~ ^\[a-f0-9\]\{64\}$ ]]; then
+                    FILE_ISSUES="${FILE_ISSUES}     • Pattern: ${PATTERN:0:50}\n"
+                    FILE_HAS_ISSUES=1
+                fi
             fi
         done
         
         # Check for keywords (case-insensitive)
+        FOUND_KEYWORDS=""
         for KEYWORD in "${KEYWORDS[@]}"; do
-            if echo "$STAGED_CONTENT" | grep -qi "$KEYWORD"; then
-                echo -e "${RED}⚠️  Potential sensitive keyword found in $FILE${NC}"
-                echo -e "${YELLOW}   Keyword found: $KEYWORD${NC}"
-                FOUND_SENSITIVE=1
+            if echo "$STAGED_CONTENT" | grep -qi "$KEYWORD" 2>/dev/null; then
+                # Only list unique important keywords
+                if [[ "$KEYWORD" == *"API_KEY"* ]] || \
+                   [[ "$KEYWORD" == *"TOKEN"* ]] || \
+                   [[ "$KEYWORD" == *"SECRET"* ]] || \
+                   [[ "$KEYWORD" == *"PASSWORD"* ]] || \
+                   [[ "$KEYWORD" == "BEGIN "* ]]; then
+                    if [[ ! "$FOUND_KEYWORDS" == *"$KEYWORD"* ]]; then
+                        FOUND_KEYWORDS="${FOUND_KEYWORDS} $KEYWORD"
+                        FILE_HAS_ISSUES=1
+                    fi
+                fi
             fi
         done
+        
+        # If issues found, display them
+        if [ $FILE_HAS_ISSUES -eq 1 ]; then
+            echo -e "${RED}   ⚠️  Potential sensitive data detected!${NC}"
+            if [ ! -z "$FILE_ISSUES" ]; then
+                echo -e "${YELLOW}${FILE_ISSUES}${NC}"
+            fi
+            if [ ! -z "$FOUND_KEYWORDS" ]; then
+                echo -e "${YELLOW}     • Keywords found:${FOUND_KEYWORDS}${NC}"
+            fi
+            FOUND_SENSITIVE=1
+        fi
         
         # Special check for .env variables
         if echo "$STAGED_CONTENT" | grep -qE "^[A-Z_]+=['\"]?[a-zA-Z0-9_\-]{20,}['\"]?$"; then
