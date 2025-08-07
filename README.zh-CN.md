@@ -198,36 +198,78 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 **重要**：确保`.env`在`.gitignore`中！
 
-## 自定义配置 ⚙️
+## 高级配置 ⚙️
 
-### 添加新的检测模式
+### 配置文件支持（新功能！ 🎉）
 
-编辑`check-secrets.sh`，在`PATTERNS`数组中添加新模式：
+在仓库根目录创建 `.gitsecrets.yml` 文件进行高级配置：
+
+```yaml
+# .gitsecrets.yml
+version: 1
+enabled: true
+
+# 组织内部的自定义模式
+custom_patterns:
+  - pattern: "INTERNAL_KEY_[A-Z0-9]{32}"
+    description: "内部API密钥"
+    
+# 自定义检测关键词
+custom_keywords:
+  - "COMPANY_SECRET"
+  - "INTERNAL_TOKEN"
+
+# 白名单配置
+whitelist:
+  # 跳过这些文件
+  files:
+    - "README.md"
+    - "docs/examples/*"
+    
+  # 忽略这些模式
+  patterns:
+    - "sk-test.*"  # 测试密钥
+    - "example\\.com"
+    
+  # 跳过这些扩展名
+  extensions:
+    - ".md"
+    - ".txt"
+    
+  # 跳过这些目录
+  directories:
+    - "node_modules"
+    - "test/fixtures"
+
+actions:
+  block_commit: true  # 或 false 仅警告模式
+```
+
+**功能特点：**
+- ✅ 自定义检测模式和关键词
+- ✅ 白名单支持（文件、模式、扩展名、目录）
+- ✅ 配置阻止或仅警告模式
+- ✅ 控制输出详细程度
+
+参见 [.gitsecrets.example.yml](.gitsecrets.example.yml) 获取完整示例。
+
+### 手动自定义
+
+或者直接编辑 `check-secrets.sh`：
 
 ```bash
+# 在 PATTERNS 数组中添加模式
 declare -a PATTERNS=(
-    # 添加你的自定义模式
     "your-pattern-here"
     # ...
 )
-```
 
-### 添加新的关键词
-
-在`KEYWORDS`数组中添加：
-
-```bash
+# 在 KEYWORDS 数组中添加关键词
 declare -a KEYWORDS=(
-    # 添加你的关键词
     "YOUR_SECRET_KEY"
     # ...
 )
 ```
-
-### 调整检测严格程度
-
-- **更严格**：将高熵字符串检查改为阻塞而非警告
-- **更宽松**：注释掉某些检测模式
 
 ## 常见问题 ❓
 

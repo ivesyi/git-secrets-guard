@@ -202,36 +202,78 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 **Important**: Make sure `.env` is in `.gitignore`!
 
-## ⚙️ Customization
+## ⚙️ Advanced Configuration
 
-### Add New Detection Patterns
+### Configuration File Support (New! 🎉)
 
-Edit `check-secrets.sh`, add patterns to `PATTERNS` array:
+Create a `.gitsecrets.yml` file in your repository root for advanced configuration:
+
+```yaml
+# .gitsecrets.yml
+version: 1
+enabled: true
+
+# Custom patterns for your organization
+custom_patterns:
+  - pattern: "INTERNAL_KEY_[A-Z0-9]{32}"
+    description: "Internal API keys"
+    
+# Custom keywords to detect
+custom_keywords:
+  - "COMPANY_SECRET"
+  - "INTERNAL_TOKEN"
+
+# Whitelist configuration
+whitelist:
+  # Skip these files
+  files:
+    - "README.md"
+    - "docs/examples/*"
+    
+  # Ignore these patterns
+  patterns:
+    - "sk-test.*"  # Test keys
+    - "example\\.com"
+    
+  # Skip these extensions
+  extensions:
+    - ".md"
+    - ".txt"
+    
+  # Skip these directories
+  directories:
+    - "node_modules"
+    - "test/fixtures"
+
+actions:
+  block_commit: true  # or false for warning-only mode
+```
+
+**Features:**
+- ✅ Custom detection patterns and keywords
+- ✅ Whitelist files, patterns, extensions, and directories
+- ✅ Configure blocking vs warning mode
+- ✅ Control output verbosity
+
+See [.gitsecrets.example.yml](.gitsecrets.example.yml) for a complete example.
+
+### Manual Customization
+
+Alternatively, edit `check-secrets.sh` directly:
 
 ```bash
+# Add patterns to PATTERNS array
 declare -a PATTERNS=(
-    # Add your custom pattern
     "your-pattern-here"
     # ...
 )
-```
 
-### Add New Keywords
-
-Add to `KEYWORDS` array:
-
-```bash
+# Add keywords to KEYWORDS array
 declare -a KEYWORDS=(
-    # Add your keyword
     "YOUR_SECRET_KEY"
     # ...
 )
 ```
-
-### Adjust Detection Strictness
-
-- **Stricter**: Change high-entropy string check from warning to blocking
-- **Looser**: Comment out certain detection patterns
 
 ## ❓ FAQ
 
