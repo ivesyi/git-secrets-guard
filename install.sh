@@ -88,21 +88,30 @@ download_file() {
 install_for_current_repo() {
     if [ ! -d .git ]; then
         print_warning "Current directory is not a Git repository"
-        read -p "Initialize a Git repository here? (y/n) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        
+        # In non-interactive mode, automatically init git repo
+        if [ ! -t 0 ]; then
+            print_info "Initializing Git repository..."
             git init
             print_success "Git repository initialized"
         else
-            print_info "Skipping current repository installation"
-            return
+            # Interactive mode - ask user
+            read -p "Initialize a Git repository here? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                git init
+                print_success "Git repository initialized"
+            else
+                print_info "Skipping current repository installation"
+                return
+            fi
         fi
     fi
     
     # Install hook in current repository
     cp "$INSTALL_DIR/check-secrets.sh" .git/hooks/pre-commit
     chmod +x .git/hooks/pre-commit
-    print_success "Hook installed in current repository"
+    print_success "Hook installed in current repository: $(pwd)"
 }
 
 install_globally() {
