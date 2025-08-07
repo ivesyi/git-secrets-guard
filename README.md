@@ -37,22 +37,15 @@
 
 ## 🚀 Quick Install
 
-### Method 1: One-Line Install (Simplest) 🎯
+### One-Line Install 🎯
 
-Using curl:
 ```bash
-curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
-```
+# Option 1: Current repository only
+curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 1
 
-Using wget:
-```bash
-wget -qO- https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
+# Option 2: Current + all future repositories (recommended)
+curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 2
 ```
-
-This will automatically download and configure git-secrets-guard. You can choose to:
-- Install for current repository
-- Install globally (all new repositories automatically protected)
-- Install both
 
 ### Method 2: Local Installation Script
 
@@ -204,7 +197,7 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 ## ⚙️ Advanced Configuration
 
-### Configuration File Support (New! 🎉)
+### Configuration File Support
 
 Create a `.gitsecrets.yml` file in your repository root for advanced configuration:
 

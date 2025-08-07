@@ -37,22 +37,15 @@
 
 ## 快速安装 🚀
 
-### 方法1：一键安装（最简单） 🎯
+### 一键安装 🎯
 
-使用 curl：
 ```bash
-curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
-```
+# 选项 1：仅当前仓库
+curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 1
 
-或使用 wget：
-```bash
-wget -qO- https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
+# 选项 2：当前 + 所有未来仓库（推荐）
+curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 2
 ```
-
-这将自动下载并配置 git-secrets-guard，您可以选择：
-- 为当前仓库安装
-- 全局安装（所有新仓库自动保护）
-- 或两者都安装
 
 ### 方法2：使用本地安装脚本
 
@@ -200,7 +193,7 @@ const apiKey = process.env.OPENAI_API_KEY;
 
 ## 高级配置 ⚙️
 
-### 配置文件支持（新功能！ 🎉）
+### 配置文件支持
 
 在仓库根目录创建 `.gitsecrets.yml` 文件进行高级配置：
 

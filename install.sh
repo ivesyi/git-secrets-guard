@@ -2,8 +2,11 @@
 
 # One-line installer for git-secrets-guard
 # Usage: 
-#   curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
-#   wget -qO- https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash
+#   # Option 1: Current repository only
+#   curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 1
+#
+#   # Option 2: Current + all future repositories (recommended)
+#   curl -sSL https://raw.githubusercontent.com/ivesyi/git-secrets-guard/main/install.sh | bash -s 2
 
 set -e
 
@@ -147,15 +150,26 @@ main() {
     download_file "$REPO_RAW_URL/LICENSE" "$INSTALL_DIR/LICENSE" 2>/dev/null || true
     echo ""
     
-    # Ask user for installation preference
-    echo -e "${BOLD}Choose installation option:${NC}"
-    echo "  1) Install for current repository only"
-    echo "  2) Install globally (all new repositories)"
-    echo "  3) Both"
-    echo "  4) Skip installation (manual setup)"
-    echo ""
-    
-    read -p "Enter your choice (1-4): " choice
+# Check if running in non-interactive mode or with parameters
+    if [ ! -t 0 ] || [ $# -gt 0 ]; then
+        # Non-interactive mode or parameters provided
+        if [ $# -gt 0 ]; then
+            choice="$1"
+            echo -e "${BLUE}Using option: $choice${NC}"
+        else
+            # Default to option 1 for non-interactive
+            choice="1"
+            echo -e "${BLUE}Non-interactive mode detected, using default: Current repository only${NC}"
+        fi
+    else
+        # Interactive mode
+        echo -e "${BOLD}Choose installation option:${NC}"
+        echo "  1) Current repository only"
+        echo "  2) Current repository + all future repositories (recommended)"
+        echo ""
+        
+        read -p "Enter your choice (1-2): " choice
+    fi
     echo ""
     
     case $choice in
@@ -163,21 +177,11 @@ main() {
             install_for_current_repo
             ;;
         2)
-            install_globally
-            ;;
-        3)
             install_for_current_repo
             install_globally
             ;;
-        4)
-            print_info "Manual installation chosen"
-            echo ""
-            echo "To manually install in a repository:"
-            echo "  cp $INSTALL_DIR/check-secrets.sh /path/to/repo/.git/hooks/pre-commit"
-            echo "  chmod +x /path/to/repo/.git/hooks/pre-commit"
-            ;;
         *)
-            print_error "Invalid choice"
+            print_error "Invalid choice. Please use 1 or 2."
             exit 1
             ;;
     esac
