@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+test_secret*
+*.test
+*.tmp
+
+# Logs
+*.log
+
+# Environment files (for testing)
+.env
+.env.*
+*.env
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
